@@ -41,9 +41,9 @@ const [email, setEmail] = useState("");`,
 const LANGUAGES = Array.from(new Set(SAMPLE_POSTS.map(post => post.language)));
 
 export const Feed = () => {
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("all");
 
-  const filteredPosts = selectedLanguage
+  const filteredPosts = selectedLanguage !== "all"
     ? SAMPLE_POSTS.filter(post => post.language === selectedLanguage)
     : SAMPLE_POSTS;
 
@@ -55,7 +55,7 @@ export const Feed = () => {
             <SelectValue placeholder="Filter by language" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All languages</SelectItem>
+            <SelectItem value="all">All languages</SelectItem>
             {LANGUAGES.map(lang => (
               <SelectItem key={lang} value={lang}>
                 {lang}
