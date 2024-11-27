@@ -15,7 +15,15 @@ for (let i = 0; i < numbers.length; i++) {
     optimizedCode: `const numbers = [1, 2, 3, 4, 5];
 const doubled = numbers.map(n => n * 2);`,
     likes: 42,
-    comments: 5,
+    comments: [
+      {
+        id: "1",
+        username: "john_doe",
+        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
+        content: "Great optimization! map is much cleaner.",
+        timestamp: "1h ago"
+      }
+    ],
     timestamp: "2h ago",
     language: "typescript",
   },
@@ -32,7 +40,7 @@ const [email, setEmail] = useState("");`,
   email: ""
 });`,
     likes: 28,
-    comments: 3,
+    comments: [],
     timestamp: "4h ago",
     language: "javascript",
   },
