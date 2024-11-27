@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { CodePost } from "./CodePost";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const SAMPLE_POSTS = [
   {
@@ -15,6 +17,7 @@ const doubled = numbers.map(n => n * 2);`,
     likes: 42,
     comments: 5,
     timestamp: "2h ago",
+    language: "typescript",
   },
   {
     username: "code_master",
@@ -31,13 +34,37 @@ const [email, setEmail] = useState("");`,
     likes: 28,
     comments: 3,
     timestamp: "4h ago",
+    language: "javascript",
   },
 ];
 
+const LANGUAGES = Array.from(new Set(SAMPLE_POSTS.map(post => post.language)));
+
 export const Feed = () => {
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+
+  const filteredPosts = selectedLanguage
+    ? SAMPLE_POSTS.filter(post => post.language === selectedLanguage)
+    : SAMPLE_POSTS;
+
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-6">
-      {SAMPLE_POSTS.map((post, index) => (
+      <div className="w-[200px] mb-6">
+        <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filter by language" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All languages</SelectItem>
+            {LANGUAGES.map(lang => (
+              <SelectItem key={lang} value={lang}>
+                {lang}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {filteredPosts.map((post, index) => (
         <CodePost key={index} {...post} />
       ))}
     </div>

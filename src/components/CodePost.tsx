@@ -3,6 +3,7 @@ import { Heart, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar } from "./ui/avatar";
 import { Separator } from "./ui/separator";
+import { Badge } from "./ui/badge";
 import { cn } from "@/lib/utils";
 
 interface CodePostProps {
@@ -14,7 +15,7 @@ interface CodePostProps {
   likes: number;
   comments: number;
   timestamp: string;
-  language?: string;
+  language: string;
 }
 
 export const CodePost = ({
@@ -26,7 +27,7 @@ export const CodePost = ({
   likes,
   comments,
   timestamp,
-  language = "typescript",
+  language,
 }: CodePostProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(likes);
@@ -48,6 +49,9 @@ export const CodePost = ({
             <span className="text-sm text-gray-500">{timestamp}</span>
           </div>
         </div>
+        <Badge variant="secondary" className="text-xs">
+          {language}
+        </Badge>
       </div>
 
       <h2 className="text-xl font-semibold mb-4">{title}</h2>
