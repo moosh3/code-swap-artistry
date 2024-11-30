@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar } from "./ui/avatar";
@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 import { Comment } from "./Comment";
 import { CommentForm } from "./CommentForm";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface CommentType {
   id: string;
@@ -18,6 +21,7 @@ interface CommentType {
 }
 
 interface CodePostProps {
+  id?: string;
   username: string;
   avatarUrl: string;
   title: string;
@@ -27,28 +31,101 @@ interface CodePostProps {
   comments: CommentType[];
   timestamp: string;
   language: string;
+  userId?: string;
 }
 
 export const CodePost = ({
+  id,
   username,
   avatarUrl,
   title,
   initialCode,
   optimizedCode,
-  likes,
+  likes: initialLikes,
   comments: initialComments,
   timestamp,
   language,
+  userId,
 }: CodePostProps) => {
   const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(likes);
+  const [likesCount, setLikesCount] = useState(initialLikes);
   const [comments, setComments] = useState<CommentType[]>(initialComments);
   const [showComments, setShowComments] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikesCount(isLiked ? likesCount - 1 : likesCount + 1);
+  useEffect(() => {
+    if (user && id) {
+      checkIfLiked();
+    }
+  }, [user, id]);
+
+  const checkIfLiked = async () => {
+    if (!id || !user) return;
+
+    const { data, error } = await supabase
+      .from("likes")
+      .select("*")
+      .eq("post_id", id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!error && data) {
+      setIsLiked(true);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to like posts",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!id) {
+      console.error("Post ID is missing");
+      return;
+    }
+
+    if (isLiked) {
+      const { error } = await supabase
+        .from("likes")
+        .delete()
+        .eq("post_id", id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to unlike post",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsLiked(false);
+      setLikesCount(likesCount - 1);
+    } else {
+      const { error } = await supabase
+        .from("likes")
+        .insert([{ post_id: id, user_id: user.id }]);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to like post",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsLiked(true);
+      setLikesCount(likesCount + 1);
+    }
   };
 
   const handleComment = (content: string) => {
@@ -69,11 +146,19 @@ export const CodePost = ({
     <div className="post-card p-6 animate-fade-up">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
+          <Avatar 
+            className="h-10 w-10 cursor-pointer" 
+            onClick={() => userId && navigate(`/profile/${userId}`)}
+          >
             <img src={avatarUrl} alt={username} className="object-cover" />
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-medium">{username}</span>
+            <span 
+              className="font-medium cursor-pointer hover:underline" 
+              onClick={() => userId && navigate(`/profile/${userId}`)}
+            >
+              {username}
+            </span>
             <span className="text-sm text-gray-500">{timestamp}</span>
           </div>
         </div>

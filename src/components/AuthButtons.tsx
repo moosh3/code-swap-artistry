@@ -7,9 +7,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const AuthButtons = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   if (user) {
     return (
@@ -23,6 +25,9 @@ export const AuthButtons = () => {
           <DropdownMenuItem className="text-sm">
             {user.email}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate(`/profile/${user.id}`)}>
+            Profile
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => signOut()}>
             Sign out
           </DropdownMenuItem>
@@ -33,10 +38,10 @@ export const AuthButtons = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" onClick={() => window.location.href = "/login"}>
+      <Button variant="ghost" onClick={() => navigate("/login")}>
         Sign in
       </Button>
-      <Button onClick={() => window.location.href = "/signup"}>
+      <Button onClick={() => navigate("/signup")}>
         Sign up
       </Button>
     </div>

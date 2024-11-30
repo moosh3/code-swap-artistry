@@ -1,59 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CodePost } from "./CodePost";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-
-const SAMPLE_POSTS = [
-  {
-    username: "sarah_dev",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-    title: "Optimizing array manipulation in TypeScript",
-    initialCode: `const numbers = [1, 2, 3, 4, 5];
-const doubled = [];
-for (let i = 0; i < numbers.length; i++) {
-  doubled.push(numbers[i] * 2);
-}`,
-    optimizedCode: `const numbers = [1, 2, 3, 4, 5];
-const doubled = numbers.map(n => n * 2);`,
-    likes: 42,
-    comments: [
-      {
-        id: "1",
-        username: "john_doe",
-        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-        content: "Great optimization! map is much cleaner.",
-        timestamp: "1h ago"
-      }
-    ],
-    timestamp: "2h ago",
-    language: "typescript",
-  },
-  {
-    username: "code_master",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-    title: "Better React state management",
-    initialCode: `const [name, setName] = useState("");
-const [age, setAge] = useState(0);
-const [email, setEmail] = useState("");`,
-    optimizedCode: `const [user, setUser] = useState({
-  name: "",
-  age: 0,
-  email: ""
-});`,
-    likes: 28,
-    comments: [],
-    timestamp: "4h ago",
-    language: "javascript",
-  },
-];
-
-const LANGUAGES = Array.from(new Set(SAMPLE_POSTS.map(post => post.language)));
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 export const Feed = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("all");
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const { toast } = useToast();
 
-  const filteredPosts = selectedLanguage !== "all"
-    ? SAMPLE_POSTS.filter(post => post.language === selectedLanguage)
-    : SAMPLE_POSTS;
+  useEffect(() => {
+    fetchPosts();
+  }, [selectedLanguage]);
+
+  const fetchPosts = async () => {
+    try {
+      let query = supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles:profiles(username),
+          likes:likes(count)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (selectedLanguage !== "all") {
+        query = query.eq("language", selectedLanguage);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setPosts(data || []);
+
+      // Update languages list
+      const uniqueLanguages = Array.from(
+        new Set(data?.map((post) => post.language) || [])
+      );
+      setLanguages(uniqueLanguages);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load posts",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-6">
@@ -64,7 +70,7 @@ export const Feed = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All languages</SelectItem>
-            {LANGUAGES.map(lang => (
+            {languages.map(lang => (
               <SelectItem key={lang} value={lang}>
                 {lang}
               </SelectItem>
@@ -72,8 +78,21 @@ export const Feed = () => {
           </SelectContent>
         </Select>
       </div>
-      {filteredPosts.map((post, index) => (
-        <CodePost key={index} {...post} />
+      {posts.map((post) => (
+        <CodePost
+          key={post.id}
+          id={post.id}
+          username={post.profiles.username}
+          avatarUrl={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`}
+          title={post.title}
+          initialCode={post.initial_code}
+          optimizedCode={post.optimized_code}
+          likes={post.likes?.[0]?.count || 0}
+          comments={[]}
+          timestamp={new Date(post.created_at).toLocaleDateString()}
+          language={post.language}
+          userId={post.user_id}
+        />
       ))}
     </div>
   );
