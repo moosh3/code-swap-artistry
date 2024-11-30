@@ -48,3 +48,65 @@
 .post-card {
   @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
 }
+
+/* Syntax highlighting styles */
+pre {
+  @apply font-mono text-sm;
+}
+
+code {
+  @apply font-mono;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  @apply text-gray-500;
+}
+
+.token.punctuation {
+  @apply text-gray-600;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol {
+  @apply text-blue-500;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin {
+  @apply text-green-600;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  @apply text-yellow-600;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  @apply text-purple-600;
+}
+
+.token.function,
+.token.class-name {
+  @apply text-pink-600;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  @apply text-red-500;
+}
