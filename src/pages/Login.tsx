@@ -9,15 +9,21 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
+    
     try {
       await signIn(email, password);
       navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sign in");
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -31,6 +37,9 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
             <div className="space-y-2">
               <Input
                 type="email"
