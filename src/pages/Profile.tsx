@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CodePost } from "@/components/CodePost";
@@ -14,6 +14,7 @@ const Profile = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [likedPosts, setLikedPosts] = useState<any[]>([]);
@@ -31,25 +32,37 @@ const Profile = () => {
   }, [id]);
 
   const fetchProfile = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id);
 
-    if (error) {
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        toast({
+          title: "Profile not found",
+          description: "The requested profile does not exist",
+          variant: "destructive",
+        });
+        navigate("/");
+        return;
+      }
+
+      const profileData = data[0];
+      setProfile(profileData);
+      setBio(profileData.bio || "");
+      setGithubUrl(profileData.github_url || "");
+      setLoading(false);
+    } catch (error: any) {
       toast({
         title: "Error",
         description: "Failed to load profile",
         variant: "destructive",
       });
-      return;
+      navigate("/");
     }
-
-    setProfile(data);
-    setBio(data.bio || "");
-    setGithubUrl(data.github_url || "");
-    setLoading(false);
   };
 
   const fetchPosts = async () => {
