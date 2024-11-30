@@ -49,13 +49,24 @@ export const CreatePost = () => {
     }
 
     try {
+      // First, get the user's profile id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      if (!profileData) throw new Error("Profile not found");
+
+      // Then create the post using the profile id
       const { error } = await supabase.from("posts").insert([
         {
           title,
           initial_code: initialCode,
           optimized_code: optimizedCode,
           language,
-          user_id: user.id,
+          user_id: profileData.id, // Use profile id instead of auth user id
         },
       ]);
 
